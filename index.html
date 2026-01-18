@@ -84,10 +84,14 @@
                 font-size: 0.85rem;
             }
 
+            /* Content becomes flex column instead of grid */
             .content {
-                display: flex;
-                flex-direction: column;
+                display: flex !important;
+                flex-direction: column !important;
                 height: calc(100% - 45px);
+                /* Header subtraction */
+                grid-template-columns: none !important;
+                /* Force kill desktop grid */
                 overflow: hidden;
             }
 
@@ -96,15 +100,18 @@
             .results-panel {
                 order: 1;
                 /* Result first! */
-                height: 35vh;
-                /* Fixed height for viewing outcomes */
+                width: 100% !important;
+                height: 35vh !important;
                 min-height: 180px;
                 padding: 10px;
                 border-bottom: 2px solid var(--primary);
+                border-right: none !important;
                 background: #fff;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                display: flex;
+                display: flex !important;
                 flex-direction: column;
+                flex-shrink: 0;
+                /* Don't compress me */
             }
 
             .status-bar {
