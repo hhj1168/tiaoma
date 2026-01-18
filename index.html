@@ -135,15 +135,24 @@
 
             .controls-panel {
                 order: 2;
-                /* Controls below */
                 flex: 1;
                 width: 100%;
                 border-right: none;
                 padding: 15px;
                 overflow-y: auto;
                 background: #f1f5f9;
-                padding-bottom: 80px;
-                /* Space for actions bit */
+                padding-bottom: 20px;
+                /* Minimal base padding */
+            }
+
+            .mobile-footer {
+                padding: 40px 0 120px 0;
+                /* Large bottom pad to clear fixed actions */
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                opacity: 0.5;
+                letter-spacing: 2px;
             }
 
             .control-grid {
@@ -162,6 +171,7 @@
                 left: 0;
                 right: 0;
                 background: rgba(255, 255, 255, 0.9);
+                -webkit-backdrop-filter: blur(5px);
                 backdrop-filter: blur(5px);
                 padding: 10px 20px;
                 border-top: 1px solid var(--border);
@@ -473,8 +483,14 @@
 
         <div class="content">
             <!-- Left: Controls -->
-            <div class="controls-panel" id="controls">
-                <!-- JS Populated -->
+            <div class="controls-panel">
+                <div id="controls">
+                    <!-- JS Populated -->
+                </div>
+                <!-- 底部水印与撑开空间 -->
+                <div class="mobile-footer">
+                    —— 挑碼助手 專業版 ——
+                </div>
             </div>
 
             <!-- Right: Results -->
