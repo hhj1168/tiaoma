@@ -44,12 +44,101 @@
             max-width: 1400px;
             height: 100%;
             background: var(--card-bg);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: var(--shadow);
             display: grid;
             grid-template-rows: auto 1fr;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Responsive Breakpoint */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                height: auto;
+                /* Allow scrolling */
+                overflow: auto;
+                background: #f5f7fa;
+            }
+
+            .main-container {
+                border-radius: 0;
+                height: 100vh;
+                /* Full viewport height on mobile */
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header {
+                padding: 10px 15px;
+                flex-shrink: 0;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            /* Content becomes flex column instead of grid */
+            .content {
+                display: flex;
+                flex-direction: column;
+                height: calc(100% - 60px);
+                /* Adjust for header */
+                overflow: hidden;
+            }
+
+            /* Controls: Fixed height at bottom or scrollable top? 
+               Let's keep controls scrollable at top/middle and results fixed or toggleable.
+               Better UX for mobile: 
+               Controls take top 50-60%, Results take bottom 40-50%.
+            */
+
+            .controls-panel {
+                order: 1;
+                /* Controls first */
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                flex: 1;
+                /* Takes remaining space */
+                padding: 15px;
+                gap: 16px;
+            }
+
+            .results-panel {
+                order: 2;
+                width: 100%;
+                height: auto;
+                max-height: 40%;
+                /* Limit results height */
+                min-height: 200px;
+                padding: 15px;
+                background: white;
+                box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+                /* Slight shadow to separate */
+                z-index: 10;
+            }
+
+            .balls-grid {
+                grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+                gap: 8px;
+            }
+
+            .ball {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+
+            /* Buttons optimization for touch */
+            .btn {
+                padding: 10px 4px;
+                /* Larger touch target */
+                font-size: 0.85rem;
+            }
         }
 
         /* Header */
@@ -67,6 +156,7 @@
             font-size: 1.5rem;
             background: linear-gradient(to right, var(--primary), var(--primary-dark));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
         }
@@ -320,6 +410,18 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        .header h1 span {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            font-weight: normal;
+        }
+
+        .status-bar .count-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin: 0 5px;
+        }
     </style>
 </head>
 
@@ -327,10 +429,10 @@
 
     <div class="main-container">
         <div class="header">
-            <h1>挑碼助手 <span style="font-size:0.8rem; opacity:0.6; font-weight:normal;">PRO</span></h1>
+            <h1>挑碼助手 <span>PRO</span></h1>
             <div class="year-selector">
                 <span>年份</span>
-                <select id="yearSelect"></select>
+                <select id="yearSelect" aria-label="選擇年份"></select>
             </div>
         </div>
 
@@ -345,9 +447,9 @@
                 <div class="status-bar">
                     <div class="rules-summary" id="ruleDisplay">未選擇條件</div>
                     <div>
-                        <span style="color:#94a3b8; font-size:0.9rem; margin-right:5px;">共</span>
+                        <span class="count-label">共</span>
                         <span class="count-badge" id="count">0</span>
-                        <span style="color:#94a3b8; font-size:0.9rem; margin-left:5px;">碼</span>
+                        <span class="count-label">碼</span>
                     </div>
                 </div>
 
@@ -367,10 +469,29 @@
         class MacauPicker {
             constructor() {
                 this.selectedRules = new Set();
-                this.currentYear = new Date().getFullYear();
                 this.zodiacMap = {};
                 this.wildZodiacs = new Set(["鼠", "虎", "兔", "龍", "蛇", "猴"]);
                 this.domesticZodiacs = new Set(["牛", "馬", "羊", "雞", "狗", "豬"]);
+                this.zodiacOrder = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"];
+
+                // Lunar New Year Dates Look-up Table (Gregorian Date string)
+                this.lunarNewYearDates = {
+                    2024: "2024-02-10",
+                    2025: "2025-01-29",
+                    2026: "2026-02-17",
+                    2027: "2027-02-06",
+                    2028: "2028-01-26",
+                    2029: "2029-02-13",
+                    2030: "2030-02-03",
+                    2031: "2031-01-23",
+                    2032: "2032-02-11",
+                    2033: "2033-01-31",
+                    2034: "2034-02-19",
+                    2035: "2035-02-08"
+                };
+
+                // Calculate current Zodiac year based on Lunar Calendar
+                this.currentYear = this.calculateCurrentZodiacYear();
                 this.zodiacOrder = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"];
 
                 this.colorRules = {
@@ -380,6 +501,23 @@
                 };
 
                 this.init();
+            }
+
+            calculateCurrentZodiacYear() {
+                const now = new Date();
+                const year = now.getFullYear();
+
+                // If we have data for this year, check if we passed LNY
+                if (this.lunarNewYearDates[year]) {
+                    const lnyDate = new Date(this.lunarNewYearDates[year]);
+                    // Reset time to midnight for accurate comparison
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                    if (today < lnyDate) {
+                        return year - 1; // Still previous zodiac year
+                    }
+                }
+                return year;
             }
 
             init() {
