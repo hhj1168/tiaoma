@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六合彩挑碼助手 - Ultra Premium</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+            --red-ball: #ef4444;
+            --blue-ball: #3b82f6;
+            --green-ball: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* No scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2vh 2vw;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-rows: auto 1fr;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .year-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        select {
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-weight: bold;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Content Grid */
+        .content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            /* Fixed width for controls, rest for balls */
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Controls (Left Side) */
+        .controls-panel {
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            /* Increased gap between groups */
+            background: rgba(248, 250, 252, 0.8);
+        }
+
+        .control-group-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .group-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .group-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            margin-left: 10px;
+            opacity: 0.6;
+        }
+
+        .control-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        /* Specific Grid layouts */
+        .cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .cols-5 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .btn {
+            padding: 8px 4px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            /* Softer rounded corners */
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-main);
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #f8faff;
+            transform: translateY(-1px);
+        }
+
+        .btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Results (Right Side) */
+        .results-panel {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .count-badge {
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .rules-summary {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60%;
+        }
+
+        .balls-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            gap: 10px;
+            align-content: start;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .ball {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: default;
+        }
+
+        .ball:hover {
+            transform: scale(1.15);
+        }
+
+        .ball.red {
+            background: radial-gradient(circle at 35% 35%, #ff9999, var(--red-ball));
+        }
+
+        .ball.blue {
+            background: radial-gradient(circle at 35% 35%, #99ccff, var(--blue-ball));
+        }
+
+        .ball.green {
+            background: radial-gradient(circle at 35% 35%, #99ffbb, var(--green-ball));
+        }
+
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear {
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .btn-clear:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-copy {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-copy:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>挑碼助手 <span style="font-size:0.8rem; opacity:0.6; font-weight:normal;">PRO</span></h1>
+            <div class="year-selector">
+                <span>年份</span>
+                <select id="yearSelect"></select>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Left: Controls -->
+            <div class="controls-panel" id="controls">
+                <!-- JS Populated -->
+            </div>
+
+            <!-- Right: Results -->
+            <div class="results-panel">
+                <div class="status-bar">
+                    <div class="rules-summary" id="ruleDisplay">未選擇條件</div>
+                    <div>
+                        <span style="color:#94a3b8; font-size:0.9rem; margin-right:5px;">共</span>
+                        <span class="count-badge" id="count">0</span>
+                        <span style="color:#94a3b8; font-size:0.9rem; margin-left:5px;">碼</span>
+                    </div>
+                </div>
+
+                <div class="balls-grid" id="ballsContainer">
+                    <!-- Balls Populated -->
+                </div>
+
+                <div class="actions">
+                    <button class="action-btn btn-clear" onclick="app.clear()">清空重置</button>
+                    <button class="action-btn btn-copy" onclick="app.copy()">複製號碼</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MacauPicker {
+            constructor() {
+                this.selectedRules = new Set();
+                this.currentYear = new Date().getFullYear();
+                this.zodiacMap = {};
+                this.wildZodiacs = new Set(["鼠", "虎", "兔", "龍", "蛇", "猴"]);
+                this.domesticZodiacs = new Set(["牛", "馬", "羊", "雞", "狗", "豬"]);
+                this.zodiacOrder = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"];
+
+                this.colorRules = {
+                    "red": new Set([1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46]),
+                    "blue": new Set([3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48]),
+                    "green": new Set([5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49])
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupYearSelector();
+                this.updateRulesForYear(this.currentYear);
+                this.renderControls();
+                this.updateDisplay();
+            }
+
+            setupYearSelector() {
+                const select = document.getElementById('yearSelect');
+                for (let y = 2024; y <= 2035; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === this.currentYear) opt.selected = true;
+                    select.appendChild(opt);
+                }
+                select.addEventListener('change', (e) => {
+                    this.currentYear = parseInt(e.target.value);
+                    this.updateRulesForYear(this.currentYear);
+                    this.updateDisplay();
+                });
+            }
+
+            updateRulesForYear(year) {
+                const refYear = 2025;
+                const refIdx = 5; // Snake
+                const diff = year - refYear;
+                const currentIdx = (refIdx + diff) % 12;
+
+                this.zodiacMap = {};
+                this.wildNumbers = new Set();
+                this.domesticNumbers = new Set();
+
+                for (let n = 1; n <= 49; n++) {
+                    const zIdx = (currentIdx - (n - 1) + 120) % 12;
+                    const zodiac = this.zodiacOrder[zIdx];
+
+                    if (!this.zodiacMap[zodiac]) this.zodiacMap[zodiac] = new Set();
+                    this.zodiacMap[zodiac].add(n);
+
+                    if (this.wildZodiacs.has(zodiac)) this.wildNumbers.add(n);
+                    if (this.domesticZodiacs.has(zodiac)) this.domesticNumbers.add(n);
+                }
+            }
+
+            checkRule(n, rule) {
+                const strN = n.toString();
+                const sum = strN.split('').reduce((a, b) => a + parseInt(b), 0);
+
+                const rules = {
+                    "單": n % 2 === 1,
+                    "雙": n % 2 === 0,
+                    "大": n > 24,
+                    "小": n <= 24,
+                    "大單": n > 24 && n % 2 === 1,
+                    "小單": n <= 24 && n % 2 === 1,
+                    "大雙": n > 24 && n % 2 === 0,
+                    "小雙": n <= 24 && n % 2 === 0,
+                    "合單": sum % 2 === 1,
+                    "合雙": sum % 2 === 0,
+                    "合大": [7, 8, 9, 16, 17, 18, 19, 25, 26, 27, 28, 29, 34, 35, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48, 49].includes(n),
+                    "合小": [1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 30, 31, 32, 33, 40, 41, 42].includes(n),
+                    "尾大": (n % 10) >= 5,
+                    "尾小": (n % 10) < 5,
+                    "紅波": this.colorRules.red.has(n),
+                    "藍波": this.colorRules.blue.has(n),
+                    "綠波": this.colorRules.green.has(n),
+                    "紅單": this.colorRules.red.has(n) && n % 2 === 1,
+                    "紅雙": this.colorRules.red.has(n) && n % 2 === 0,
+                    "藍單": this.colorRules.blue.has(n) && n % 2 === 1,
+                    "藍雙": this.colorRules.blue.has(n) && n % 2 === 0,
+                    "綠單": this.colorRules.green.has(n) && n % 2 === 1,
+                    "綠雙": this.colorRules.green.has(n) && n % 2 === 0,
+                    "0頭": n < 10,
+                    "1頭": n >= 10 && n < 20,
+                    "2頭": n >= 20 && n < 30,
+                    "3頭": n >= 30 && n < 40,
+                    "4頭": n >= 40 && n < 50,
+                    "野獸": this.wildNumbers.has(n),
+                    "家肖": this.domesticNumbers.has(n),
+                    "金": [3, 4, 11, 12, 25, 26, 33, 34, 41, 42].includes(n),
+                    "木": [7, 8, 15, 16, 23, 24, 37, 38, 45, 46].includes(n),
+                    "水": [13, 14, 21, 22, 29, 30, 43, 44].includes(n),
+                    "火": [1, 2, 9, 10, 17, 18, 31, 32, 39, 40, 47, 48].includes(n),
+                    "土": [5, 6, 19, 20, 27, 28, 35, 36, 49].includes(n)
+                };
+
+                for (let i = 0; i < 10; i++) rules[`${i}尾`] = (n % 10 === i);
+                for (let z of this.zodiacOrder) rules[z] = this.zodiacMap[z].has(n);
+
+                return rules[rule];
+            }
+
+            toggleRule(rule) {
+                if (this.selectedRules.has(rule)) {
+                    this.selectedRules.delete(rule);
+                } else {
+                    this.selectedRules.add(rule);
+                }
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                // Update Buttons
+                document.querySelectorAll('.btn').forEach(btn => {
+                    if (this.selectedRules.has(btn.textContent)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                // Update Text
+                const ruleBox = document.getElementById('ruleDisplay');
+                ruleBox.textContent = this.selectedRules.size > 0
+                    ? Array.from(this.selectedRules).join(", ")
+                    : "未選擇條件";
+
+                // Calculate Numbers
+                let numbers = new Set();
+                if (this.selectedRules.size > 0) {
+                    for (let i = 1; i <= 49; i++) numbers.add(i);
+
+                    const categories = {
+                        "odd_even": ["單", "雙"],
+                        "size": ["大", "小"],
+                        "combo": ["大單", "小單", "大雙", "小雙"],
+                        "tail_size": ["尾大", "尾小"],
+                        "color": ["紅波", "藍波", "綠波"],
+                        "color_combo": ["紅單", "紅雙", "藍單", "藍雙", "綠單", "綠雙"],
+                        "zodiac": this.zodiacOrder,
+                        "head": ["0頭", "1頭", "2頭", "3頭", "4頭"],
+                        "tail": ["0尾", "1尾", "2尾", "3尾", "4尾", "5尾", "6尾", "7尾", "8尾", "9尾"],
+                        "element": ["金", "木", "水", "火", "土"],
+                        "animal_type": ["野獸", "家肖"],
+                        "sum_size": ["合大", "合小"],
+                        "sum_parity": ["合單", "合雙"]
+                    };
+
+                    let categorySets = {};
+
+                    this.selectedRules.forEach(rule => {
+                        let ruleNums = new Set();
+                        for (let n = 1; n <= 49; n++) {
+                            if (this.checkRule(n, rule)) ruleNums.add(n);
+                        }
+
+                        let foundCat = false;
+                        for (let [cat, rules] of Object.entries(categories)) {
+                            if (rules.includes(rule)) {
+                                if (!categorySets[cat]) categorySets[cat] = new Set();
+                                ruleNums.forEach(n => categorySets[cat].add(n));
+                                foundCat = true;
+                                break;
+                            }
+                        }
+                    });
+
+                    let result = new Set();
+                    let first = true;
+                    for (let set of Object.values(categorySets)) {
+                        if (first) {
+                            result = new Set(set);
+                            first = false;
+                        } else {
+                            result = new Set([...result].filter(x => set.has(x)));
+                        }
+                    }
+                    numbers = result;
+                } else {
+                    numbers = new Set();
+                }
+
+                // Render Balls
+                const container = document.getElementById('ballsContainer');
+                container.innerHTML = '';
+                const sorted = Array.from(numbers).sort((a, b) => a - b);
+
+                document.getElementById('count').textContent = sorted.length;
+
+                sorted.forEach(n => {
+                    const ball = document.createElement('div');
+                    ball.className = 'ball';
+                    ball.textContent = n < 10 ? '0' + n : n;
+
+                    if (this.colorRules.red.has(n)) ball.classList.add('red');
+                    else if (this.colorRules.blue.has(n)) ball.classList.add('blue');
+                    else ball.classList.add('green');
+
+                    container.appendChild(ball);
+                });
+            }
+
+            renderControls() {
+                // Define groups with their preferred grid layout (cols)
+                const groups = [
+                    { name: "基本篩選", items: ["單", "雙", "大", "小"], cols: 4 },
+                    { name: "波色", items: ["紅波", "藍波", "綠波"], cols: 3 },
+                    { name: "十二生肖", items: this.zodiacOrder, cols: 4 },
+                    { name: "五行", items: ["金", "木", "水", "火", "土"], cols: 5 },
+                    { name: "頭數", items: ["0頭", "1頭", "2頭", "3頭", "4頭"], cols: 5 },
+                    { name: "尾數", items: ["0尾", "1尾", "2尾", "3尾", "4尾", "5尾", "6尾", "7尾", "8尾", "9尾"], cols: 5 },
+                    { name: "複合條件", items: ["大單", "小單", "大雙", "小雙", "合大", "合小", "合單", "合雙", "尾大", "尾小"], cols: 5 },
+                    { name: "波色細分", items: ["紅單", "紅雙", "藍單", "藍雙", "綠單", "綠雙"], cols: 3 },
+                    { name: "家野", items: ["野獸", "家肖"], cols: 2 }
+                ];
+
+                const container = document.getElementById('controls');
+                container.innerHTML = ''; // Clear existing
+
+                groups.forEach(group => {
+                    // Wrapper
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'control-group-wrapper';
+
+                    // Label
+                    const label = document.createElement('div');
+                    label.className = 'group-label';
+                    label.textContent = group.name;
+                    wrapper.appendChild(label);
+
+                    // Grid
+                    const grid = document.createElement('div');
+                    grid.className = `control-grid cols-${group.cols}`;
+
+                    group.items.forEach(rule => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn';
+                        btn.textContent = rule;
+                        btn.onclick = () => this.toggleRule(rule);
+
+                        // Check if active (re-rendering preserves state)
+                        if (this.selectedRules.has(rule)) {
+                            btn.classList.add('active');
+                        }
+
+                        grid.appendChild(btn);
+                    });
+
+                    wrapper.appendChild(grid);
+                    container.appendChild(wrapper);
+                });
+            }
+
+            clear() {
+                this.selectedRules.clear();
+                this.updateDisplay();
+            }
+
+            copy() {
+                const nums = Array.from(document.querySelectorAll('.ball')).map(b => b.textContent);
+                if (nums.length === 0) return;
+                navigator.clipboard.writeText(nums.join(',')).then(() => {
+                    alert('已複製 ' + nums.length + ' 個號碼');
+                });
+            }
+        }
+
+        const app = new MacauPicker();
+    </script>
+</body>
+
+</html>
